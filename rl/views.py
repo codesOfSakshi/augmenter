@@ -57,6 +57,8 @@ def my_form_post(request):
                 new_records.append(Positive(sentence=logic_res, parent_id=parent.id, positive_id=counter))
                 result.append([logic, logic_res])
             Positive.objects.bulk_create(new_records)
+            parent.last_positive_id = counter
+            parent.save()
 
         elif neg_logics:
             t = EDA()
@@ -75,6 +77,8 @@ def my_form_post(request):
                     new_records.append(Negative(sentence=logic_res, parent_id=parent.id, negative_id=counter))
                     result.append([logic, logic_res])
             Negative.objects.bulk_create(new_records)
+            parent.last_negative_id = counter
+            parent.save()
 
         return render(request, 'index.html', {"input_text":text, "result":result, "positive_options": positive_options, "negative_options": negative_options})
     return render(request, 'index.html', {"input_text":"", "result":[], "positive_options": positive_options, "negative_options": negative_options})
