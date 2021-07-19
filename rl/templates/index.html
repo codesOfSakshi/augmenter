@@ -13,7 +13,26 @@
 <script>
  $(document).ready(function() {
     $('select').formSelect();
+    $("#pos-options").hide();
+    $("#neg-options").hide();
+    $('input[name=group1]').click(function () {
+          console.log("hello")
+          if (this.id == "pos") {
+            $("#pos-options").show();
+          } else {
+            $("#pos-options").hide();
+          }
+
+          if (this.id == "neg") {
+            $("#neg-options").show();
+          } else {
+            $("#neg-options").hide();
+          }
+      });
+
  });
+
+ 
 </script>
 
  <nav class="green">
@@ -44,25 +63,45 @@
           <input name = "input_id" id="input_id" type="text" value="{{input_id}}" class="validate">
           <label for="text">id</label>
        </div>
+       </div>
+       <div class="row">
+       <p>
+        <label>
+          <input name="group1" type="radio" value="Positive" id="pos" />
+          <span>Positive</span>
+        </label>
+      </p>
+      <p>
+        <label>
+          <input name="group1" type="radio" value="Negative" id="neg" />
+          <span>Negative</span>
+        </label>
+      </p>
+
         {% if positive_options %}
-        <div class="input-field col s12" name=".Positive">
-          <select name='pos-logic' multiple>
-            <option value="" disabled selected>Select Positive Augmentation logics</option>
+        <div class="input-field col s12" name=".Positive" id="pos-options">
             {% for each in positive_options %}
-            <option value="{{each}}">{{each}}</option>
+            <p>
+              <label>
+                <input type="checkbox" value="{{each}}" name="pos-logic"/>
+                <span>{{each}}</span>
+              </label>
+            </p>
             {% endfor %}
-          </select>
         </div>
         {% endif %}
 
+
         {% if negative_options %}
-        <div class="input-field col s12" name=".Negative">
-          <select name='neg-logic' multiple>
-            <option value="" disabled selected>Select Negative Augmentation logics</option>
+        <div class="input-field col s12" name=".Negative" id="neg-options">
             {% for each in negative_options %}
-            <option value="{{each}}">{{each}}</option>
+            <p>
+              <label>
+                <input type="checkbox" value="{{each}}" name="neg-logic"/>
+                <span>{{each}}</span>
+              </label>
+            </p>
             {% endfor %}
-          </select>
         </div>
         {% endif %}
 
@@ -96,13 +135,4 @@
   </div>
 
 
-  <footer class="page-footer green bottom">
-
-    <div class="footer-copyright green darken-3">
-      <div class="container ">
-        developed by Sakshi Mishra
-
-      </div>
-    </div>
-  </footer>
   <script>M.AutoInit();</script>
