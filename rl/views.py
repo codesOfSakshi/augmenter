@@ -1,8 +1,9 @@
 # -- coding: utf-8 --
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect
 from .forms import *
 from django.db import transaction
+from django.contrib import messages
 import nlpaug
 import random
 import string
@@ -39,13 +40,19 @@ negative_options = [
 def my_form_post(request):
     if request.method == 'POST':
         text = request.POST.get('text')
-        input_id = request.POST.get('input_id')
+        input_id = int(request.POST.get('input_id'))
         result = []
         pos_logics = request.POST.getlist('pos-logic')
         neg_logics = request.POST.getlist('neg-logic')
 
         # parent for the input text
-        parent, _ = Parent.objects.get_or_create(sentence=text, input_id=input_id)
+        parent = Parent.objects.filter(sentence=text).last()
+        if parent and parent.input_id!=input_id:
+            messages.error(request,f'Invalid input id! Sentence exists with input id {parent.input_id}')
+            return redirect('/index')
+        elif not parent:
+            parent = Parent.objects.create(sentence=text, input_id=input_id)
+
         source_text = text
 
         if pos_logics:
@@ -61,13 +68,17 @@ def my_form_post(request):
                 last_positive = Positive.objects.filter(parent_id=parent.input_id).last()
                 if not last_positive:
                     counter = int(parent.input_id) + 0.1
+                    counter = f"P-{counter}"
                 else:
-                    counter = get_next_counter(last_positive.positive_id)
+                    current_counter = last_positive.positive_id.split("-")[1]
+                    counter = get_next_counter(current_counter)
+                    counter = f"P-{counter}"
+
 
                 Positive.objects.create(sentence=text, parent_id=parent.input_id, positive_id=counter)
                 parent.last_positive_id = counter
                 parent.save()
-                result.append([logics, text])
+                result.append([counter, text])
 
 
         elif neg_logics:
@@ -95,12 +106,16 @@ def my_form_post(request):
                 last_negative = Negative.objects.filter(parent_id=parent.input_id).last()
                 if not last_negative:
                     counter = int(parent.input_id) + 0.1
+                    counter = f"N-{counter}"
                 else:
-                    counter = get_next_counter(last_negative.negative_id)
+                    current_counter = last_negative.negative_id.split("-")[1]
+                    counter = get_next_counter(current_counter)
+                    counter = f"N-{counter}"
+
                 Negative.objects.create(sentence=text, parent_id=parent.input_id, negative_id=counter)
                 parent.last_negative_id = counter
                 parent.save()
-                result.append([logics, text])
+                result.append([counter, text])
 
         return render(request, 'index.html', {"input_text":source_text, "result":result, "positive_options": positive_options, "negative_options": negative_options})
     return render(request, 'index.html', {"input_text":"", "result":[], "positive_options": positive_options, "negative_options": negative_options})

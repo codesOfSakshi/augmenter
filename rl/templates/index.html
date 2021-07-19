@@ -27,6 +27,14 @@
     <div class="col s12">
         <form action="/index" method="post">
           {% csrf_token %}
+          {% for message in messages %}
+
+          <div class="alert alert-success">
+
+              {{ message }}
+
+          </div>
+          {% endfor %}
       <div class="row">
         <div class="input-field col s12">
             <input name = "text" id="text" type="text" value="{{input_text}}" class="validate">
@@ -68,7 +76,7 @@
       <table class="striped">
         <thead>
           <tr>
-              <th>Logic</th>
+              <th>Test Id</th>
               <th>Result</th>
           </tr>
         </thead>
