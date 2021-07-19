@@ -13,6 +13,7 @@ from textaugment import EDA, Wordnet
 import emoji
 from .models import Parent, Positive, Negative
 import decimal
+import math
 
 positive_options = [
     "Random word swap",
@@ -38,27 +39,36 @@ negative_options = [
 def my_form_post(request):
     if request.method == 'POST':
         text = request.POST.get('text')
+        input_id = request.POST.get('input_id')
         result = []
         pos_logics = request.POST.getlist('pos-logic')
         neg_logics = request.POST.getlist('neg-logic')
 
         # parent for the input text
-        parent, _ = Parent.objects.get_or_create(sentence=text)
+        parent, _ = Parent.objects.get_or_create(sentence=text, input_id=input_id)
+        source_text = text
 
         if pos_logics:
             t = EDA()
-            last_positive = Positive.objects.filter(parent_id=parent.id).last()
-            counter = round(last_positive.positive_id, 1) if last_positive else 1.0
-            new_records = []
+
+            logics = []
 
             for logic in pos_logics:
-                logic_res = apply_pos_logic(logic, text, t)
-                counter+=0.1
-                new_records.append(Positive(sentence=logic_res, parent_id=parent.id, positive_id=counter))
-                result.append([logic, logic_res])
-            Positive.objects.bulk_create(new_records)
-            parent.last_positive_id = counter
-            parent.save()
+                text = apply_pos_logic(logic, text, t) 
+                logics.append(logic)
+
+            if logics:
+                last_positive = Positive.objects.filter(parent_id=parent.input_id).last()
+                if not last_positive:
+                    counter = int(parent.input_id) + 0.1
+                else:
+                    counter = get_next_counter(last_positive.positive_id)
+
+                Positive.objects.create(sentence=text, parent_id=parent.input_id, positive_id=counter)
+                parent.last_positive_id = counter
+                parent.save()
+                result.append([logics, text])
+
 
         elif neg_logics:
             t = EDA()
@@ -66,21 +76,33 @@ def my_form_post(request):
             half_txt = " ".join(words[:int(len(words) / 2)])
             rem_txt = " ".join(words[int(len(words) / 2):])
             n = int(len(words) / 2)
-            
-            last_negative = Negative.objects.filter(parent_id=parent.id).last()
-            counter = round(last_negative.negative_id, 1) if last_negative else 1.0
-            new_records = []
-            for logic in neg_logics:
-                logic_res = evaluate_negative_augmentation(text, logic, t, half_txt, rem_txt, n, words)
-                if logic_res:
-                    counter+=0.1
-                    new_records.append(Negative(sentence=logic_res, parent_id=parent.id, negative_id=counter))
-                    result.append([logic, logic_res])
-            Negative.objects.bulk_create(new_records)
-            parent.last_negative_id = counter
-            parent.save()
 
-        return render(request, 'index.html', {"input_text":text, "result":result, "positive_options": positive_options, "negative_options": negative_options})
+            logics = []
+            for logic in neg_logics:
+                if text:
+                    text = evaluate_negative_augmentation(text, logic, t, half_txt, rem_txt, n, words)
+                    if text:
+                        words = text.split(" ")
+                        if words:
+                            half_txt = " ".join(words[:int(len(words) / 2)])
+                            rem_txt = " ".join(words[int(len(words) / 2):])
+                            n = int(len(words) / 2)
+                            logics.append(logic)
+                else:
+                    text = source_text
+
+            if logics:
+                last_negative = Negative.objects.filter(parent_id=parent.input_id).last()
+                if not last_negative:
+                    counter = int(parent.input_id) + 0.1
+                else:
+                    counter = get_next_counter(last_negative.negative_id)
+                Negative.objects.create(sentence=text, parent_id=parent.input_id, negative_id=counter)
+                parent.last_negative_id = counter
+                parent.save()
+                result.append([logics, text])
+
+        return render(request, 'index.html', {"input_text":source_text, "result":result, "positive_options": positive_options, "negative_options": negative_options})
     return render(request, 'index.html', {"input_text":"", "result":[], "positive_options": positive_options, "negative_options": negative_options})
 
 
@@ -159,5 +181,15 @@ def apply_pos_logic(logic, text, t):
         return nac.RandomCharAug('swap').augment(text, n=1)
     elif logic == "Random Char delete":
         return nac.RandomCharAug('delete').augment(text, n=1)
+
+
+def get_next_counter(counter):
+
+    int_part, dec_part = counter.split(".")
+    dec_part = int(dec_part)+1
+    size = len(str(dec_part))
+    dec_part = dec_part/(10**size)
+    counter =  format(int(int_part) + dec_part, f'.{size}f')
+    return counter
 
 
