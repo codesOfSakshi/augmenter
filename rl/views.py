@@ -9,6 +9,7 @@ import random
 import string
 import nlpaug.augmenter.word as naw
 import nlpaug.augmenter.char as nac
+import nlpaug.augmenter.sentence as nas
 import nltk
 from textaugment import EDA, Wordnet
 import emoji
@@ -17,24 +18,26 @@ import decimal
 import math
 
 positive_options = [
-    "Random word swap",
-    "Random word delete",
-    "Random word insert",
+    "Text to emoji",
     "Synonym Augmentation",
+    "ContextualWordEmbsAug Augmentation",
+    "ContextualWordEmbsForSentenceAug Augmentation",
+    "BackTranslationAug Augmentation",
+    "ReservedAug Augmentation",
+    "AbstSummAug Augmentation",
+    "LambadaAug Augmentation"
+]
+negative_options = [
     "OCR Augmentation",
+    "Antonym of text",
     "KeyBoard Augmentation",
     "Random Char insert",
     "Random Char swap",
     "Random Char delete",
+    "SpellingAug Augmentation",
+    "SplitAug Augmentation",
 ]
-negative_options = [
-    "Text to emoji",
-    "Antonym of text",
-    "Insert sentence",
-    "Special character insertion",
-    "Swap in the sentence",
-    "Sentence insertion",
-]
+
 
 @transaction.atomic
 def my_form_post(request):
@@ -124,28 +127,23 @@ def my_form_post(request):
 # helper functions are below
 
 def evaluate_negative_augmentation(text, neg_logic, t, half_txt, rem_txt, n, words):
-    # 0. replace with emojis
-    if neg_logic == "Text to emoji":
-        return text_to_emoji(text)
-    # 1. make antonym of whole text
+
+    if neg_logic == "OCR Augmentation":
+        return nac.OcrAug().augment(text, n=1)
     elif neg_logic == "Antonym of text":
         return naw.AntonymAug().augment(text, n=1)
-    # 2. insert n words in the half sentence, where n = half of size of sentence
-    elif neg_logic == "Insert sentence":
-        try:
-            rand_index = random.randint(0, n)
-            return t.random_insertion(sentence=words[rand_index], n=n) + " " + rem_txt
-        except:
-            pass
-    # 3. make antonym of whole text and insert a special character at any position
-    elif neg_logic == "Special character insertion":
-        return get_with_special_char(text)
-    # 4. swap half of the sentence
-    elif neg_logic == "Swap in the sentence":
-        return t.random_swap(half_txt) + " " + rem_txt
-    # 5. insert one random word in half text
-    elif neg_logic == "Sentence insertion":
-        return t.random_insertion(half_txt) + " " + rem_txt
+    elif neg_logic == "KeyBoard Augmentation":
+        return nac.KeyboardAug().augment(text, n=1)
+    elif neg_logic == "Random Char insert":
+        return nac.RandomCharAug('insert').augment(text, n=1)
+    elif neg_logic == "Random Char swap":
+        return nac.RandomCharAug('swap').augment(text, n=1)
+    elif neg_logic == "Random Char delete":
+        return nac.RandomCharAug('delete').augment(text, n=1)
+    elif neg_logic == "SpellingAug Augmentation":
+        return naw.SpellingAug().augment(text, n=1)
+    elif neg_logic == "SplitAug Augmentation":
+        return naw.SplitAug().augment(text, n=1)
 
 
 def get_with_special_char(text):
@@ -178,24 +176,23 @@ def text_to_emoji(text):
 
 
 def apply_pos_logic(logic, text, t):
-    if logic == "Random word swap":
-        return t.random_swap(text)
-    elif logic == "Random word delete":
-        return t.random_deletion(text, p=0.3)
-    elif logic == "Random word insert":
-        return t.random_insertion(text)
+    if logic == 'Text to Emoji':
+        return text_to_emoji(text)
     elif logic == "Synonym Augmentation":
         return naw.SynonymAug(aug_src='wordnet').augment(text, n=1)
-    elif logic == "OCR Augmentation":
-        return nac.OcrAug().augment(text, n=1)
-    elif logic == "KeyBoard Augmentation":
-        return nac.KeyboardAug().augment(text, n=1)
-    elif logic == "Random Char insert":
-        return nac.RandomCharAug('insert').augment(text, n=1)
-    elif logic == "Random Char swap":
-        return nac.RandomCharAug('swap').augment(text, n=1)
-    elif logic == "Random Char delete":
-        return nac.RandomCharAug('delete').augment(text, n=1)
+    elif logic == "ContextualWordEmbsAug Augmentation":
+        return naw.ContextualWordEmbsAug().augment(text, n=1)
+    elif logic == "ContextualWordEmbsForSentenceAug Augmentation":
+        return naw.ContextualWordEmbsAug().augment(text, n=1)
+    elif logic == "BackTranslationAug Augmentation":
+        return naw.BackTranslationAug().augment(text, n=1)
+    elif logic == "ReservedAug Augmentation":
+        return naw.ReservedAug(reserved_tokens=[]).augment(text, n=1) 
+    elif logic == "AbstSummAug Augmentation":
+        return nas.AbstSummAug().augment(text, n=1) 
+    elif logic == "LambadaAug Augmentation":
+        return nas.LambadaAug().augment(text, n=1)           
+
 
 
 def get_next_counter(counter):
