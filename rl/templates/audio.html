@@ -1,0 +1,190 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+
+ <!-- Compiled and minified CSS -->
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+ <!-- Compiled and minified JavaScript -->
+
+ <script type = "text/javascript" src = "https://code.jquery.com/jquery-2.1.1.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+
+<script>
+ $(document).ready(function() {
+    $('select').formSelect();
+    $("#pos-options").hide();
+    $("#neg-options").hide();
+    $('input[name=group1]').click(function () {
+          console.log("hello")
+          if (this.id == "pos") {
+            $("#pos-options").show();
+          } else {
+            $("#pos-options").hide();
+          }
+
+          if (this.id == "neg") {
+            $("#neg-options").show();
+          } else {
+            $("#neg-options").hide();
+          }
+      });
+
+ });
+
+ 
+</script>
+
+ <nav class="green">
+    <div class="nav-wrapper">
+      <a href="" class="brand-logo">Text Augmentation</a>
+    </div>
+  </nav>
+
+
+ <div class="row">
+    <div class="input-field col s12">
+        <h2>Recorder App</h2>
+        <p>
+          <button type="button" id="record">Record</button>
+          <button type="button" id="stopRecord" disabled>Stop</button>
+        </p>
+        <p>
+          <audio id=recordedAudio></audio>        
+        </p>
+        {% if not result %}
+        <p> Output Audio</p>
+        <audio src={{result.url}}></audio> 
+        {% endif %}
+        {% for message in messages %}
+
+        <div class="alert alert-success">
+
+            {{ message }}
+
+        </div>
+        {% endfor %}
+    </div>
+    <div class="col s12">
+        <form action="/audio" method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+
+      <div class="row">
+
+        <div class="input-field col s12">
+            <input type="file" name="voice">
+         </div>
+        <div class="input-field col s12">
+          <input name = "input_id" id="input_id" type="text" value="{{input_id}}" class="validate">
+          <label for="text">id</label>
+       </div>
+       </div>
+       <div class="row">
+       <p>
+        <label>
+          <input name="group1" type="radio" value="Positive" id="pos" />
+          <span>Positive</span>
+        </label>
+      </p>
+      <p>
+        <label>
+          <input name="group1" type="radio" value="Negative" id="neg" />
+          <span>Negative</span>
+        </label>
+      </p>
+
+        {% if positive_options %}
+        <div class="input-field col s12" name=".Positive" id="pos-options">
+            {% for each in positive_options %}
+            <p>
+              <label>
+                <input type="checkbox" value="{{each}}" name="pos-logic"/>
+                <span>{{each}}</span>
+              </label>
+            </p>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+
+        {% if negative_options %}
+        <div class="input-field col s12" name=".Negative" id="neg-options">
+            {% for each in negative_options %}
+            <p>
+              <label>
+                <input type="checkbox" value="{{each}}" name="neg-logic"/>
+                <span>{{each}}</span>
+              </label>
+            </p>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="input-field col s12"></div>
+            <input class="button" type="submit" />
+        </div>
+       </form>
+  
+       
+       {% if result %}
+      <table class="striped">
+        <thead>
+          <tr>
+              <th>Test Id</th>
+              <th>Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for each in result %}
+          <tr>
+            <td>{{each.0}}</td>
+            <td>{{each.1}}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+
+      </div>
+    </div>
+  </div>
+
+
+  <script> 
+  const recorder = document.getElementById('recorder');
+    navigator.mediaDevices.getUserMedia({audio:true})
+    .then(stream => {handlerFunction(stream)})
+
+    function handlerFunction(stream) {
+      rec = new MediaRecorder(stream);
+      rec.ondataavailable = e => {
+        audioChunks.push(e.data);
+        if (rec.state == "inactive"){
+          let blob = new Blob(audioChunks,{type:'audio/mp3'});
+          src = URL.createObjectURL(blob);
+          recordedAudio.src = src;
+          recordedAudio.controls=true;
+          recordedAudio.autoplay=true;
+          sendData(blob)
+          }
+        }
+      }
+    
+    function sendData(data) {}
+      record.onclick = e => {
+        record.disabled = true;
+        record.style.backgroundColor = "blue"
+        stopRecord.disabled=false;
+        audioChunks = [];
+        rec.start();
+        }
+      stopRecord.onclick = e => {
+        record.disabled = false;
+        stop.disabled=true;
+        record.style.backgroundColor = "red"
+        rec.stop();
+        }
+  </script>
+
+
+  <script>M.AutoInit();</script>

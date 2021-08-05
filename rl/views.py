@@ -1,7 +1,6 @@
 # -- coding: utf-8 --
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect
-from .forms import *
 from django.db import transaction
 from django.contrib import messages
 import nlpaug
@@ -10,7 +9,9 @@ import string
 import nlpaug.augmenter.word as naw
 import nlpaug.augmenter.char as nac
 import nlpaug.augmenter.sentence as nas
+import nlpaug.augmenter.audio as naa
 import nltk
+import librosa
 from textaugment import EDA, Wordnet
 import emoji
 from .models import Parent, Positive, Negative
@@ -40,6 +41,40 @@ negative_options = [
 
 
 @transaction.atomic
+def audio_form(request):
+    positive_options = [
+        "LoudnessAug",
+        "NoiseAug",
+        "PitchAug",
+        "ShiftAug",
+        "NormalizeAug",
+        "SpeedAug",
+    ]
+
+    negative_options = [
+        "CropAug",
+        "MaskAug"
+    ]
+
+    if request.method == 'POST':
+        pos_logics = request.POST.getlist('pos-logic')
+        neg_logics = request.POST.getlist('neg-logic')
+
+        upload_file = request.FILES['voice']
+        wav, sr = librosa.load(upload_file, sr=None)
+        for logic in pos_logics:
+            wav = apply_audio_pos_logic(wav, logic) 
+        
+        for logic in neg_logics:
+            wav = apply_audio_neg_logic(wav, logic) 
+        
+        return render(request, 'audio.html', { "input_text":"", "result":wav, "positive_options": positive_options, "negative_options": negative_options})
+
+    return render(request, 'audio.html', { "input_text":"", "result":[], "positive_options": positive_options, "negative_options": negative_options})
+
+
+
+@transaction.atomic
 def my_form_post(request):
     if request.method == 'POST':
         text = request.POST.get('text')
@@ -59,7 +94,7 @@ def my_form_post(request):
         source_text = text
 
         if pos_logics:
-            t = EDA()
+            t = None
 
             logics = []
 
@@ -85,7 +120,7 @@ def my_form_post(request):
 
 
         elif neg_logics:
-            t = EDA()
+            t = None
             words = text.split(" ")
             half_txt = " ".join(words[:int(len(words) / 2)])
             rem_txt = " ".join(words[int(len(words) / 2):])
@@ -194,6 +229,27 @@ def apply_pos_logic(logic, text, t):
         return nas.LambadaAug().augment(text, n=1)           
 
 
+def apply_audio_pos_logic(wav, logic):
+    if logic == "LoudnessAug":
+        return naa.LoudnessAug().augment(wav)
+    elif logic == "NoiseAug":
+        return naa.NoiseAug().augment(wav)
+    elif logic == "PitchAug":
+        return naa.PitchAug().augment(wav)
+    elif logic == "ShiftAug":
+        return naa.ShiftAug().augment(wav)
+    elif logic == "NormalizeAug":
+        return naa.NormalizeAug().augment(wav)
+    elif logic == "SpeedAug":
+        return naa.SpeedAug().augment(wav)
+
+
+def apply_audio_neg_logic(wav, logic):
+
+    if logic == "CropAug":
+        return naa.CropAug().augment(wav)
+    elif logic == "MaskAug":
+        return naa.MaskAug().augment(wav)
 
 def get_next_counter(counter):
 
