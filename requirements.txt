@@ -13,3 +13,4 @@ emoji==1.2.0
 psycopg2-binary==2.7.4
 dj_database_url==0.5.0
 transformers==4.5.1
+librosa==0.8.1
