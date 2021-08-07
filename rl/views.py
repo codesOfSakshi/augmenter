@@ -225,7 +225,7 @@ def apply_pos_logic(logic, text, t):
     elif logic == "ContextualWordEmbsAug Augmentation":
         return naw.ContextualWordEmbsAug(model_path='bert-base-uncased').augment(text, n=1)
     elif logic == "ContextualWordEmbsForSentenceAug Augmentation":
-        return naw.ContextualWordEmbsAug().augment(text, n=1)
+        return naw.ContextualWordEmbsForSentenceAug().augment(text, n=1)
     elif logic == "BackTranslationAug Augmentation":
         return naw.BackTranslationAug().augment(text, n=1)
     elif logic == "ReservedAug Augmentation":
