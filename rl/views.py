@@ -223,7 +223,7 @@ def apply_pos_logic(logic, text, t):
     elif logic == "Synonym Augmentation":
         return naw.SynonymAug(aug_src='wordnet').augment(text, n=1)
     elif logic == "ContextualWordEmbsAug Augmentation":
-        return naw.ContextualWordEmbsAug().augment(text, n=1)
+        return naw.ContextualWordEmbsAug(model_path='bert-base-uncased').augment(text, n=1)
     elif logic == "ContextualWordEmbsForSentenceAug Augmentation":
         return naw.ContextualWordEmbsAug().augment(text, n=1)
     elif logic == "BackTranslationAug Augmentation":
