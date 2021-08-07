@@ -6,6 +6,7 @@ from django.contrib import messages
 import nlpaug
 import random
 import string
+import soundfile as sf
 import nlpaug.augmenter.word as naw
 import nlpaug.augmenter.char as nac
 import nlpaug.augmenter.sentence as nas
@@ -17,6 +18,8 @@ import emoji
 from .models import Parent, Positive, Negative
 import decimal
 import math
+from django.conf import settings as django_settings
+import os
 
 positive_options = [
     "Text to emoji",
@@ -61,17 +64,19 @@ def audio_form(request):
         neg_logics = request.POST.getlist('neg-logic')
 
         upload_file = request.FILES['voice']
-        wav, sr = librosa.load(upload_file, sr=None)
+        wav, sr = librosa.load(upload_file)
         for logic in pos_logics:
-            wav = apply_audio_pos_logic(wav, logic) 
+            wav = apply_audio_pos_logic(wav, logic, sr) 
         
         for logic in neg_logics:
-            wav = apply_audio_neg_logic(wav, logic) 
+            wav = apply_audio_neg_logic(wav, logic, sr)
+
+        if (pos_logics or neg_logics) and wav is not None:
+            sf.write(os.path.join(django_settings.STATIC_ROOT,'augment_audio.wav'), wav, sr)
         
         return render(request, 'audio.html', { "input_text":"", "result":wav, "positive_options": positive_options, "negative_options": negative_options})
 
-    return render(request, 'audio.html', { "input_text":"", "result":[], "positive_options": positive_options, "negative_options": negative_options})
-
+    return render(request, 'audio.html', { "input_text":"", "result":None, "positive_options": positive_options, "negative_options": negative_options})
 
 
 @transaction.atomic
@@ -229,27 +234,27 @@ def apply_pos_logic(logic, text, t):
         return nas.LambadaAug().augment(text, n=1)           
 
 
-def apply_audio_pos_logic(wav, logic):
+def apply_audio_pos_logic(wav, logic, sr):
     if logic == "LoudnessAug":
         return naa.LoudnessAug().augment(wav)
     elif logic == "NoiseAug":
         return naa.NoiseAug().augment(wav)
     elif logic == "PitchAug":
-        return naa.PitchAug().augment(wav)
+        return naa.PitchAug(sampling_rate=sr).augment(wav)
     elif logic == "ShiftAug":
-        return naa.ShiftAug().augment(wav)
+        return naa.ShiftAug(sampling_rate=sr).augment(wav)
     elif logic == "NormalizeAug":
         return naa.NormalizeAug().augment(wav)
     elif logic == "SpeedAug":
         return naa.SpeedAug().augment(wav)
 
 
-def apply_audio_neg_logic(wav, logic):
+def apply_audio_neg_logic(wav, logic, sr):
 
     if logic == "CropAug":
-        return naa.CropAug().augment(wav)
+        return naa.CropAug(sampling_rate=sr).augment(wav)
     elif logic == "MaskAug":
-        return naa.MaskAug().augment(wav)
+        return naa.MaskAug(mask_with_noise=False).augment(wav)
 
 def get_next_counter(counter):
 
