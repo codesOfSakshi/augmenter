@@ -47,16 +47,18 @@ negative_options = [
 def audio_form(request):
     positive_options = [
         "LoudnessAug",
-        "NoiseAug",
         "PitchAug",
-        "ShiftAug",
         "NormalizeAug",
         "SpeedAug",
+        "VtlpAug",
+        "PolarityInverseAug",
     ]
 
     negative_options = [
         "CropAug",
-        "MaskAug"
+        "MaskAug",        
+        "NoiseAug",
+        "ShiftAug",
     ]
 
     if request.method == 'POST':
@@ -231,22 +233,22 @@ def apply_pos_logic(logic, text, t):
     elif logic == "AbstSummAug Augmentation":
         return nas.AbstSummAug().augment(text, n=1) 
     elif logic == "LambadaAug Augmentation":
-        return nas.LambadaAug().augment(text, n=1)           
+        return nas.LambadaAug(model_dir='gpt2').augment(text, n=1)           
 
 
 def apply_audio_pos_logic(wav, logic, sr):
     if logic == "LoudnessAug":
         return naa.LoudnessAug().augment(wav)
-    elif logic == "NoiseAug":
-        return naa.NoiseAug().augment(wav)
     elif logic == "PitchAug":
         return naa.PitchAug(sampling_rate=sr).augment(wav)
-    elif logic == "ShiftAug":
-        return naa.ShiftAug(sampling_rate=sr).augment(wav)
     elif logic == "NormalizeAug":
         return naa.NormalizeAug().augment(wav)
     elif logic == "SpeedAug":
         return naa.SpeedAug().augment(wav)
+    elif logic == "VtlpAug":
+        return naa.VtlpAug(sampling_rate=sr).augment(wav)
+    elif logic == "PolarityInverseAug":
+        return naa.PolarityInverseAug().augment(wav)
 
 
 def apply_audio_neg_logic(wav, logic, sr):
@@ -255,6 +257,10 @@ def apply_audio_neg_logic(wav, logic, sr):
         return naa.CropAug(sampling_rate=sr).augment(wav)
     elif logic == "MaskAug":
         return naa.MaskAug(mask_with_noise=False).augment(wav)
+    elif logic == "ShiftAug":
+        return naa.ShiftAug(sampling_rate=sr).augment(wav)
+    elif logic == "NoiseAug":
+        return naa.NoiseAug().augment(wav)
 
 def get_next_counter(counter):
 
