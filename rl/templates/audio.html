@@ -142,7 +142,7 @@
       rec.ondataavailable = e => {
         audioChunks.push(e.data);
         if (rec.state == "inactive"){
-          let blob = new Blob(audioChunks,{type:'audio/wav'});
+          let blob = new Blob(audioChunks,{type:'audio/mp3'});
           src = URL.createObjectURL(blob);
           recordedAudio.src = src;
           recordedAudio.controls=true;
