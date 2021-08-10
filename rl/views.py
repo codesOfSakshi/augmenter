@@ -24,12 +24,7 @@ import os
 positive_options = [
     "Text to emoji",
     "Synonym Augmentation",
-    "ContextualWordEmbsAug Augmentation",
-    "ContextualWordEmbsForSentenceAug Augmentation",
-    "BackTranslationAug Augmentation",
     "ReservedAug Augmentation",
-    "AbstSummAug Augmentation",
-    "LambadaAug Augmentation"
 ]
 negative_options = [
     "OCR Augmentation",
@@ -222,18 +217,8 @@ def apply_pos_logic(logic, text, t):
         return text_to_emoji(text)
     elif logic == "Synonym Augmentation":
         return naw.SynonymAug(aug_src='wordnet').augment(text, n=1)
-    elif logic == "ContextualWordEmbsAug Augmentation":
-        return naw.ContextualWordEmbsAug(model_path='bert-base-uncased').augment(text, n=1)
-    elif logic == "ContextualWordEmbsForSentenceAug Augmentation":
-        return nas.ContextualWordEmbsForSentenceAug(max_length=10).augment(text, n=1)
-    elif logic == "BackTranslationAug Augmentation":
-        return naw.BackTranslationAug().augment(text, n=1)
     elif logic == "ReservedAug Augmentation":
-        return naw.ReservedAug(reserved_tokens=[]).augment(text, n=1) 
-    elif logic == "AbstSummAug Augmentation":
-        return nas.AbstSummAug(max_length=15).augment(text, n=1) 
-    elif logic == "LambadaAug Augmentation":
-        return nas.LambadaAug(model_dir='gpt2', max_length=15).augment(text, n=1)           
+        return naw.ReservedAug(reserved_tokens=[]).augment(text, n=1)       
 
 
 def apply_audio_pos_logic(wav, logic, sr):
