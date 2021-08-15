@@ -1,0 +1,88 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+
+ <!-- Compiled and minified CSS -->
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+ <!-- Compiled and minified JavaScript -->
+
+ <script type = "text/javascript" src = "https://code.jquery.com/jquery-2.1.1.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+
+<script>
+ $(document).ready(function() {
+    $('select').formSelect();
+    $("#pos-options").hide();
+    $("#neg-options").hide();
+    $('input[name=group1]').click(function () {
+          console.log("hello")
+          if (this.id == "pos") {
+            $("#pos-options").show();
+          } else {
+            $("#pos-options").hide();
+          }
+
+          if (this.id == "neg") {
+            $("#neg-options").show();
+          } else {
+            $("#neg-options").hide();
+          }
+      });
+
+ });
+
+ 
+</script>
+
+ <nav class="green">
+    <div class="nav-wrapper">
+      <a href="" class="brand-logo">Image Augmentation</a>
+    </div>
+  </nav>
+
+
+ <div class="row">
+    <div class="input-field col s12">
+
+        {% for message in messages %}
+
+        <div class="alert alert-success">
+
+            {{ message }}
+
+        </div>
+        {% endfor %}
+    </div>
+    <div class="col s12">
+        <form action="/image" method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+
+      <div class="row">
+
+        <div class="input-field col s12">
+            <input type="file" name="image">
+         </div>
+       </div>
+       <div class="row">
+ 
+
+        <div class="input-field col s12"></div>
+            <input class="button" type="submit" />
+        </div>
+       </form>
+      </div>
+      {% if result is not None%}
+      <p> Input Image</p>
+      <img src="{{MEDIA_URL}}/aug_image.jpeg" alt="Input Image" width="500" height="600">
+      <p> Output Image</p>
+      <img src="{% static 'augment_image.jpeg' %}" alt="Augmented Image" width="500" height="600">
+
+       {% endif %}
+
+    </div>
+  </div>
+
+
+
+  <script>M.AutoInit();</script>
